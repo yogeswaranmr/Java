@@ -1,0 +1,33 @@
+The complete, realistic lifecycle of your Java code from the moment you hit "Run" to the moment the server cleans it up.
+
+Phase 1: Compilation (The JDK)
+1. You write human-readable code in a .java file.
+2. You use the JDK (specifically the javac compiler) to translate your code into bytecode (.class files).
+3. The compiler does not bake in external libraries (like java.util.List). It uses Dynamic Linking, leaving a note for the JVM to find the library later.
+
+Phase 2: Loading into Memory (The Classloaders)
+1. When you start the JRE (which contains the JVM), it needs to pull your compiled bytecode into memory. It uses the strict Parent-First Delegation Model for security.
+2. Application Classloader: Tries to load your custom code. Defers to its parent.
+3. Platform/Extension Classloader: Tries to load standard extensions. Defers to its parent.
+4. Bootstrap Classloader: The C++ boss. It loads the core, trusted Java libraries first. If it can't find your class, it hands the job back down the chain until your Application Classloader finally loads your .class file.
+
+Phase 3: Storage (Runtime Data Areas)
+1. The JVM divides your computer's RAM into strict zones.
+2. Metaspace (Native OS Memory): The JVM takes your loaded .class file and stores the structural blueprint and method bytecode here. It sits outside the JVM's managed memory limits, so it can dynamically grow.
+3. The Heap (JVM Managed Memory): The giant shared warehouse. Every time you call new Object(), it goes here.
+ 3.1. Young Generation (Eden, S0, S1): Where new objects are born and die quickly.
+ 3.2. Old Generation: Where long-living objects are promoted.
+ 3.3. The String Pool: The actual String objects live in the Young/Old Gen, but they are tracked by a C++ VIP list (StringTable) sitting in Native Memory.
+4. The Stack (JVM Managed Memory): The thread-specific execution room. Every method call gets a Stack Frame containing:
+ 4.1. Local Variables: Primitive values (like int = 5) and memory addresses pointing to objects in the Heap.
+ 4.2. Operand Stack: The inner scratchpad where the CPU actually performs math and passes arguments.
+
+Phase 4: Execution (The Execution Engine)
+1. The CPU cannot read the bytecode sitting in the Metaspace. The Execution Engine must translate it.
+2. The Interpreter: Grabs the bytecode and translates it to native machine code line-by-line. It starts instantly but runs slowly because it has no memory and re-translates loops endlessly.
+3. The JIT (HotSpot) Compiler: Runs in the background spying on the Interpreter. If it sees a method running 10,000 times, it compiles it into highly optimized native machine code, stores it in the Code Cache, and hot-swaps it. The JVM now bypasses the Interpreter and runs at lightning speed.
+
+Phase 5: Cleanup (Garbage Collection)
+1. The JVM must prevent the Heap from filling up.
+2. The Algorithm: It uses Mark and Sweep. It traces active references from the Stack (GC Roots). If an object in the Heap isn't connected to the web, it is marked as dead and deleted.
+3. The Strategy: To save CPU power, it primarily runs ultra-fast Minor GCs on the Young Generation where 98% of objects die instantly. It only runs slow, full-pause Major GCs on the Old Generation when absolutely necessary.

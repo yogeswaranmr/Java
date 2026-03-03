@@ -27,7 +27,7 @@ public class LifeCycle {
         // We create a blockage by holding the lock in Main thread
         // Wake up t1. It tries to exit wait(), but WE hold the lock!
         // So t1 gets stuck in BLOCKED state.
-        synchronized(Worker.lock) {
+        synchronized(Worker.lock) { // acquiring the same lock which was released by t1 thread
             Worker.lock.notify();
             System.out.println("State 5: " + t1.getState()); // Output: BLOCKED
         }
